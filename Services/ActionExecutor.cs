@@ -12,19 +12,17 @@ namespace FastClick.Services
     {
 
         [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int x, int y);
-
-        [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out System.Drawing.Point lpPoint);
 
         [DllImport("user32.dll")]
-        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+        private static extern IntPtr WindowFromPoint(System.Drawing.Point Point);
 
         [DllImport("user32.dll")]
-        private static extern bool ClipCursor(ref System.Drawing.Rectangle lpRect);
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        private static extern bool ClipCursor(IntPtr lpRect);
+        private static extern bool ScreenToClient(IntPtr hWnd, ref System.Drawing.Point lpPoint);
+
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -35,12 +33,15 @@ namespace FastClick.Services
         [DllImport("user32.dll")]
         private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
 
-        private const uint MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const uint MOUSEEVENTF_LEFTUP = 0x04;
-        private const uint MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const uint MOUSEEVENTF_RIGHTUP = 0x10;
-        private const uint MOUSEEVENTF_MIDDLEDOWN = 0x20;
-        private const uint MOUSEEVENTF_MIDDLEUP = 0x80;
+
+        private const uint WM_LBUTTONDOWN = 0x0201;
+        private const uint WM_LBUTTONUP = 0x0202;
+        private const uint WM_RBUTTONDOWN = 0x0204;
+        private const uint WM_RBUTTONUP = 0x0205;
+        private const uint WM_MBUTTONDOWN = 0x0207;
+        private const uint WM_MBUTTONUP = 0x0208;
+        private const uint WM_LBUTTONDBLCLK = 0x0203;
+
 
         public ActionExecutor()
         {
@@ -63,37 +64,7 @@ namespace FastClick.Services
 
             try
             {
-                // Save current cursor position
-                System.Drawing.Point originalPosition;
-                GetCursorPos(out originalPosition);
-
-                // Lock cursor to a tiny area around original position to prevent interference
-                var lockRect = new System.Drawing.Rectangle(
-                    originalPosition.X - 1, 
-                    originalPosition.Y - 1, 
-                    2, 
-                    2
-                );
-                ClipCursor(ref lockRect);
-
-                // Move cursor to target position
                 var screenPosition = GetScreenPosition(point);
-                
-                // Temporarily unlock to allow movement to target
-                ClipCursor(IntPtr.Zero);
-                SetCursorPos(screenPosition.X, screenPosition.Y);
-
-                // Lock cursor at target position during action
-                var targetLockRect = new System.Drawing.Rectangle(
-                    screenPosition.X - 1, 
-                    screenPosition.Y - 1, 
-                    2, 
-                    2
-                );
-                ClipCursor(ref targetLockRect);
-
-                // Small delay to ensure cursor movement
-                Thread.Sleep(10);
 
                 // Execute the action based on repeat count
                 for (int i = 0; i < point.RepeatCount; i++)
@@ -105,55 +76,66 @@ namespace FastClick.Services
 
                     ExecuteSingleAction(point.Action, screenPosition.X, screenPosition.Y);
                 }
-
-                // Unlock cursor and restore original position
-                ClipCursor(IntPtr.Zero);
-                SetCursorPos(originalPosition.X, originalPosition.Y);
             }
             catch (Exception ex)
             {
-                // Make sure cursor is unlocked even if there's an error
-                ClipCursor(IntPtr.Zero);
                 System.Diagnostics.Debug.WriteLine($"Error executing action: {ex.Message}");
             }
         }
 
         private void ExecuteSingleAction(MouseAction action, int x, int y)
         {
+            System.Diagnostics.Debug.WriteLine($"Executing action at screen coords: {x}, {y}");
+
+            // Trouver la fenêtre à cette position
+            var point = new System.Drawing.Point(x, y);
+            IntPtr hWnd = WindowFromPoint(point);
+            
+            if (hWnd == IntPtr.Zero)
+            {
+                System.Diagnostics.Debug.WriteLine("No window found at coordinates");
+                return;
+            }
+
+            // Convertir les coordonnées écran en coordonnées client de la fenêtre
+            var clientPoint = new System.Drawing.Point(x, y);
+            ScreenToClient(hWnd, ref clientPoint);
+            
+            System.Diagnostics.Debug.WriteLine($"Client coords: {clientPoint.X}, {clientPoint.Y}");
+            
+            // Créer lParam avec les coordonnées client
+            IntPtr lParam = (IntPtr)((clientPoint.Y << 16) | (clientPoint.X & 0xFFFF));
+
             switch (action)
             {
                 case MouseAction.LeftClick:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_LBUTTONDOWN, IntPtr.Zero, lParam);
                     Thread.Sleep(50);
-                    mouse_event(MOUSEEVENTF_LEFTUP, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_LBUTTONUP, IntPtr.Zero, lParam);
                     break;
 
                 case MouseAction.RightClick:
-                    mouse_event(MOUSEEVENTF_RIGHTDOWN, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_RBUTTONDOWN, IntPtr.Zero, lParam);
                     Thread.Sleep(50);
-                    mouse_event(MOUSEEVENTF_RIGHTUP, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_RBUTTONUP, IntPtr.Zero, lParam);
                     break;
 
                 case MouseAction.DoubleClick:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)x, (uint)y, 0, 0);
-                    mouse_event(MOUSEEVENTF_LEFTUP, (uint)x, (uint)y, 0, 0);
-                    Thread.Sleep(10);
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)x, (uint)y, 0, 0);
-                    mouse_event(MOUSEEVENTF_LEFTUP, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_LBUTTONDBLCLK, IntPtr.Zero, lParam);
                     break;
 
                 case MouseAction.MouseDown:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_LBUTTONDOWN, IntPtr.Zero, lParam);
                     break;
 
                 case MouseAction.MouseUp:
-                    mouse_event(MOUSEEVENTF_LEFTUP, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_LBUTTONUP, IntPtr.Zero, lParam);
                     break;
 
                 case MouseAction.MiddleClick:
-                    mouse_event(MOUSEEVENTF_MIDDLEDOWN, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_MBUTTONDOWN, IntPtr.Zero, lParam);
                     Thread.Sleep(50);
-                    mouse_event(MOUSEEVENTF_MIDDLEUP, (uint)x, (uint)y, 0, 0);
+                    PostMessage(hWnd, WM_MBUTTONUP, IntPtr.Zero, lParam);
                     break;
             }
         }
