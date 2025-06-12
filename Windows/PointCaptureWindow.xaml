@@ -1,0 +1,48 @@
+<Window x:Class="FastClick.Windows.PointCaptureWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Capture Point" Height="440" Width="400"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Click 'Start Capture' then click anywhere on screen to capture position" 
+                   TextWrapping="Wrap" Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Name="StartCaptureButton" Content="Start Capture" Click="StartCapture_Click" Width="120"/>
+            <Button Name="GetCurrentButton" Content="Get Current Position" Click="GetCurrent_Click" Width="150" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <Grid Grid.Row="2" Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Label Grid.Column="0" Content="X:" VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Name="XTextBox" Margin="5,0"/>
+            <Label Grid.Column="2" Content="Y:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBox Grid.Column="3" Name="YTextBox" Margin="5,0"/>
+        </Grid>
+
+        <StackPanel Grid.Row="3" Margin="0,15,0,15">
+            <Label Content="Point Name:" Margin="0,0,0,5"/>
+            <TextBox Name="NameTextBox" Text="New Point" Height="25"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" Click="OK_Click" Width="80" IsDefault="True"/>
+            <Button Content="Cancel" Click="Cancel_Click" Width="80" Margin="10,0,0,0" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

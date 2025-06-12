@@ -1,0 +1,71 @@
+<Window x:Class="FastClick.Windows.PointEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Edit Point" Height="400" Width="350"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <Label Content="Name:"/>
+            <TextBox Name="NameTextBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,10,0,0">
+            <Label Content="Position:"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="X:" Width="30"/>
+                <TextBox Name="XTextBox" Width="80" Margin="0,0,10,0"/>
+                <Label Content="Y:" Width="30"/>
+                <TextBox Name="YTextBox" Width="80"/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,10,0,0">
+            <Label Content="Action:"/>
+            <ComboBox Name="ActionComboBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+            <Label Content="Hotkey:"/>
+            <TextBox Name="HotkeyTextBox" IsReadOnly="True"/>
+            <Button Content="Set Hotkey" Click="SetHotkey_Click" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Margin="0,10,0,0">
+            <Label Content="Repeat Count:"/>
+            <TextBox Name="RepeatTextBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" Margin="0,10,0,0">
+            <Label Content="Delay (ms):"/>
+            <TextBox Name="DelayTextBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="6" Margin="0,10,0,0">
+            <Label Content="Target App (optional):"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBox Name="TargetAppTextBox" Width="150"/>
+                <Button Content="Get Current" Click="GetCurrentApp_Click" Width="80" Margin="5,0,0,0"/>
+            </StackPanel>
+            <TextBlock Text="Leave empty to work with any app" FontSize="10" Foreground="Gray" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <CheckBox Grid.Row="7" Name="EnabledCheckBox" Content="Enabled" VerticalAlignment="Top" Margin="0,10,0,0"/>
+
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" Click="OK_Click" Width="80" IsDefault="True"/>
+            <Button Content="Cancel" Click="Cancel_Click" Width="80" Margin="10,0,0,0" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
